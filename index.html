@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UOB Transfer Slip</title>
+    <link rel="stylesheet" href="common/common.css" />
+    <link rel="stylesheet" href="variants/basic.css" />
+    <link rel="stylesheet" href="variants/withCountry.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --paper: #eef0f3;
+        --card: #fff;
+        --ink: #14233a;
+        --muted: #5b6778;
+        --line: #d5dae1;
+        --blue: #0b3c7d;
+        --blue-d: #082d5e;
+        --hit: #fff2b3;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font:
+          15px/1.45 "IBM Plex Sans",
+          system-ui,
+          Arial,
+          sans-serif;
+      }
+      header {
+        background: var(--blue);
+        color: #fff;
+        padding: 14px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+      header h1 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+      header .status {
+        font-size: 0.85rem;
+        opacity: 0.85;
+      }
+      .app {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 20px;
+        display: grid;
+        grid-template-columns: minmax(340px, 440px) 1fr;
+        gap: 20px;
+        align-items: start;
+      }
+      .form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      section {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 16px;
+      }
+      section.find {
+        border-color: var(--blue);
+        border-width: 2px;
+      }
+      h2 {
+        margin: 0 0 4px;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+      .hint {
+        margin: 0 0 12px;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+      label {
+        display: block;
+        margin-bottom: 10px;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+      label:last-child {
+        margin-bottom: 0;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        margin-top: 3px;
+        padding: 8px 10px;
+        color: var(--ink);
+        border: 1px solid #b9c1cc;
+        border-radius: 4px;
+        font: inherit;
+        background: #fff;
+      }
+      textarea {
+        min-height: 56px;
+        resize: vertical;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus,
+      button:focus-visible,
+      .opt:focus-visible {
+        outline: 2px solid var(--blue);
+        outline-offset: 1px;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+      }
+      .row label {
+        flex: 1;
+      }
+      .hidden {
+        display: none !important;
+      }
+
+      .search {
+        position: relative;
+      }
+      .search input {
+        font-size: 1.05rem;
+        padding: 11px 12px;
+        margin: 0;
+      }
+      .meta {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 6px;
+        font-size: 0.8rem;
+        color: var(--muted);
+        min-height: 1.2em;
+      }
+      .results {
+        margin: 8px 0 0;
+        padding: 0;
+        list-style: none;
+        max-height: 340px;
+        overflow-y: auto;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+      }
+      .opt {
+        padding: 8px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid #edf0f3;
+      }
+      .opt:last-child {
+        border-bottom: 0;
+      }
+      .opt[aria-selected="true"],
+      .opt:hover {
+        background: #e6eef9;
+      }
+      .opt .name {
+        font-weight: 500;
+      }
+      .opt .sub {
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+      .opt .col {
+        display: inline-block;
+        margin-right: 6px;
+        padding: 0 6px;
+        border-radius: 3px;
+        background: #e3e7ed;
+        color: var(--ink);
+      }
+      mark {
+        background: var(--hit);
+        color: inherit;
+        padding: 0 1px;
+      }
+      .filled {
+        margin-top: 8px;
+        padding: 6px 10px;
+        background: #e7f4ea;
+        border-left: 3px solid #2e7d46;
+        font-size: 0.85rem;
+      }
+
+      button {
+        font: inherit;
+        border: 0;
+        border-radius: 4px;
+        padding: 9px 16px;
+        cursor: pointer;
+        background: var(--blue);
+        color: #fff;
+      }
+      button:hover {
+        background: var(--blue-d);
+      }
+      button.ghost {
+        background: transparent;
+        color: var(--blue);
+        border: 1px solid var(--blue);
+      }
+      button.ghost:hover {
+        background: #e6eef9;
+      }
+      button.link {
+        background: none;
+        color: var(--blue);
+        padding: 0;
+        text-decoration: underline;
+      }
+
+      .preview {
+        position: sticky;
+        top: 16px;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+      }
+      .bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+      .bar strong {
+        font-weight: 600;
+      }
+      .bar .btns {
+        display: flex;
+        gap: 8px;
+      }
+      .slip-bg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        user-select: none;
+      }
+      #preview-wrap {
+        padding: 16px;
+        overflow: auto;
+        max-height: calc(100vh - 110px);
+        background: #dfe3e9;
+      }
+      #preview {
+        margin: 0 auto;
+        width: max-content;
+      }
+      .uob-slip {
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        position: relative;
+      }
+      .uob-slip .field {
+        position: absolute;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.1;
+        font-family: Arial, Helvetica, sans-serif;
+        color: #000;
+      }
+      .uob-slip .field.check {
+        font-weight: bold;
+      }
+
+      @media (max-width: 900px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+        .preview {
+          position: static;
+        }
+      }
+      @media print {
+        .no-print {
+          display: none !important;
+        }
+        body {
+          background: #fff;
+        }
+        header,
+        .form,
+        .bar {
+          display: none !important;
+        }
+        .app {
+          display: block;
+          padding: 0;
+          max-width: none;
+        }
+        .preview {
+          border: 0;
+          position: static;
+        }
+        #preview-wrap {
+          padding: 0;
+          overflow: visible;
+          max-height: none;
+          background: #fff;
+        }
+        #preview {
+          zoom: 1 !important;
+          width: auto;
+        }
+        .uob-slip {
+          box-shadow: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>UOB Transfer Slip</h1>
+      <span class="status" id="dataStatus">Loading payee data…</span>
+    </header>
+
+    <main class="app">
+      <div class="form">
+        <section class="find">
+          <h2>1. Find a payee</h2>
+          <p class="hint">
+            Type a name, account number, SWIFT code, bank or description. Pick a
+            result to fill the whole form.
+          </p>
+          <div class="search">
+            <input
+              id="q"
+              type="search"
+              autocomplete="off"
+              role="combobox"
+              aria-expanded="false"
+              aria-controls="results"
+              placeholder="Start typing…"
+            />
+            <div class="meta">
+              <span id="count"></span>
+              <span
+                ><button class="link" id="loadCsv" type="button">
+                  Load a CSV file
+                </button></span
+              >
+            </div>
+            <input
+              type="file"
+              id="csvFile"
+              accept=".csv,text/csv"
+              multiple
+              class="hidden"
+            />
+            <ul class="results hidden" id="results" role="listbox"></ul>
+          </div>
+          <div class="filled hidden" id="filled"></div>
+        </section>
+
+        <section>
+          <h2>2. Transfer</h2>
+          <label
+            >Slip layout
+            <select id="variant">
+              <option value="basic">Basic (no country fields)</option>
+              <option value="withCountry">With country</option>
+            </select></label
+          >
+          <div class="row">
+            <label>Date <input type="date" id="date" /></label>
+            <label
+              >Transfer type
+              <select id="transferType"></select
+            ></label>
+          </div>
+          <label
+            >Beneficiary type
+            <select id="beneficiaryType"></select
+          ></label>
+        </section>
+
+        <section>
+          <h2>3. Remitter (who pays)</h2>
+          <label>Account no. <input id="remitterAccount" /></label>
+          <label>Name <input id="remitterName" /></label>
+          <label>Description <input id="remitterDescription" /></label>
+        </section>
+
+        <section>
+          <h2>4. Beneficiary (who receives)</h2>
+          <label>Name <input id="beneficiaryName" /></label>
+          <label>Address <textarea id="beneficiaryAddress"></textarea></label>
+          <div class="row country-only">
+            <label>City <input id="beneficiaryCity" /></label>
+            <label>Country <input id="beneficiaryCountry" /></label>
+          </div>
+          <label>Account no. / IBAN <input id="beneficiaryAccount" /></label>
+        </section>
+
+        <section>
+          <h2>5. Beneficiary bank</h2>
+          <label>Bank name <input id="beneficiaryBank" /></label>
+          <label
+            >Bank address <textarea id="beneficiaryBankAddress"></textarea>
+          </label>
+          <div class="row country-only">
+            <label>Bank city <input id="bankCity" /></label>
+            <label>Bank country <input id="bankCountry" /></label>
+          </div>
+          <label>SWIFT code <input id="swiftCode" /></label>
+          <label>Correspondent bank <input id="correspondentBank" /></label>
+        </section>
+
+        <div>
+          <button class="ghost" id="clear" type="button">
+            Clear all fields
+          </button>
+        </div>
+      </div>
+
+      <div class="preview">
+        <div class="bar">
+          <strong>Slip preview</strong>
+          <span class="btns">
+            <button
+              class="ghost"
+              id="bgToggle"
+              type="button"
+              aria-pressed="true"
+            >
+              Background: On
+            </button>
+            <button id="print" type="button">Print slip</button>
+          </span>
+        </div>
+        <div id="preview-wrap"><div id="preview"></div></div>
+      </div>
+    </main>
+
+    <script src="common/uob.config.js"></script>
+    <script src="common/common.js"></script>
+    <script src="variants/basic.js"></script>
+    <script src="variants/withCountry.js"></script>
+    <script src="uob.renderer.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
