@@ -47,7 +47,7 @@
   let records = [];
   let matches = [];
   let active = -1;
-  let showBg = true;
+  let showBg = false;
   const BG_IMAGES = {
     basic: "assets/slip-basic.png",
     withCountry: "assets/slip-with-country.png",
@@ -230,9 +230,6 @@
       const el = $(key);
       if (el && data[key] !== "") el.value = data[key];
     });
-    // If the row has country data, switch to the layout that prints it.
-    const hasCountry = window.UOBConfig.countryFields.some((k) => data[k]);
-    if (hasCountry) $("variant").value = "withCountry";
     renderSlip();
   }
 
@@ -317,6 +314,26 @@
         renderResults();
       }
     });
+
+    // Bar search reuses the same results logic
+    const qBar = $("qBar");
+    const resultsBar = $("resultsBar");
+    if (qBar && resultsBar) {
+      qBar.addEventListener("input", () => {
+        $("q").value = qBar.value;
+        renderResults();
+        // mirror results into bar list
+        resultsBar.innerHTML = $("results").innerHTML;
+        resultsBar.classList.toggle("hidden", $("results").classList.contains("hidden"));
+      });
+      qBar.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          choose(active);
+          qBar.value = "";
+        }
+      });
+    }
 
     $("loadCsv").addEventListener("click", () => $("csvFile").click());
     $("csvFile").addEventListener("change", async (e) => {

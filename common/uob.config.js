@@ -10,13 +10,13 @@ window.UOBConfig = {
   // UI defaults
   defaults: {
     date: () => new Date().toISOString().slice(0, 10),
-    transferType: "TT",
-    beneficiaryType: "Corporate",
+    transferType: "",
+    beneficiaryType: "",
   },
 
-  // Dropdown options (short English)
-  transferTypes: ["LLG", "BI-FAST", "RTGS", "TT", "Demand Draft"],
-  beneficiaryTypes: ["Resident", "Non-Resident", "Individual", "Corporate", "Government"],
+  // Dropdown options (short English). Empty string = none (default).
+  transferTypes: ["", "LLG", "BI-FAST", "RTGS", "TT", "Demand Draft"],
+  beneficiaryTypes: ["", "Resident", "Non-Resident", "Individual", "Corporate", "Government"],
 
   // Friendly Sheet header → internal field key
   labels: {

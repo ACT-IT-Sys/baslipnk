@@ -21,7 +21,8 @@
         --line: #d5dae1;
         --blue: #0b3c7d;
         --blue-d: #082d5e;
-        --hit: #fff2b3;
+        /* --hit: #fff2b3; */
+        --hit: #fd0;
       }
       * {
         box-sizing: border-box;
@@ -149,6 +150,9 @@
         min-height: 1.2em;
       }
       .results {
+        position: absolute;
+        z-index: 1;
+
         margin: 8px 0 0;
         padding: 0;
         list-style: none;
@@ -181,7 +185,8 @@
         margin-right: 6px;
         padding: 0 6px;
         border-radius: 3px;
-        background: #e3e7ed;
+        /* background: #e3e7ed; */
+        background: #a7caff;
         color: var(--ink);
       }
       mark {
@@ -334,7 +339,7 @@
 
     <main class="app">
       <div class="form">
-        <section class="find">
+        <section class="find" style="display: none">
           <h2>1. Find a payee</h2>
           <p class="hint">
             Type a name, account number, SWIFT code, bank or description. Pick a
@@ -433,15 +438,29 @@
 
       <div class="preview">
         <div class="bar">
-          <strong>Slip preview</strong>
+          <div
+            class="search"
+            style="flex: 1; max-width: 320px; margin-right: 12px"
+          >
+            <input
+              id="qBar"
+              type="search"
+              autocomplete="off"
+              role="combobox"
+              aria-expanded="false"
+              aria-controls="resultsBar"
+              placeholder="Search payee…"
+            />
+            <ul class="results hidden" id="resultsBar" role="listbox"></ul>
+          </div>
           <span class="btns">
             <button
               class="ghost"
               id="bgToggle"
               type="button"
-              aria-pressed="true"
+              aria-pressed="false"
             >
-              Background: On
+              Background: Off
             </button>
             <button id="print" type="button">Print slip</button>
           </span>
