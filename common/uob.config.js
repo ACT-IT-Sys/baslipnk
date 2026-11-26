@@ -9,7 +9,12 @@ window.UOBConfig = {
 
   // UI defaults
   defaults: {
-    date: () => new Date().toISOString().slice(0, 10),
+    // Local date (toISOString is UTC and shows "yesterday" before 07:00 in WIB)
+    date: () => {
+      const d = new Date(),
+        p = (n) => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+    },
     transferType: "",
     beneficiaryType: "",
   },
@@ -43,6 +48,26 @@ window.UOBConfig = {
     "Bank Country": "bankCountry",
     Amount: "amount",
     "Amount In Words": "amountInWords",
+  },
+
+  // Where the ✓ goes for each option, as [dx, dy] mm from the field's x/y.
+  // The field's x/y in the layout file = the TT / Corporate box.
+  // Estimated from the slip scans: fine-tune with Move fields.
+  checkOffsets: {
+    transferType: {
+      LLG: [-19.8, -4.9],
+      "BI-FAST": [0, -4.9],
+      RTGS: [-19.8, 0],
+      TT: [0, 0],
+      "Demand Draft": [18.5, 0],
+    },
+    beneficiaryType: {
+      Resident: [-115.3, 0],
+      "Non-Resident": [-90.2, 0],
+      Individual: [-39.1, 0],
+      Corporate: [0, 0],
+      Government: [37.4, 0],
+    },
   },
 
   // Fields that exist only on withCountry variant

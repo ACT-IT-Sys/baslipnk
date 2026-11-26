@@ -152,7 +152,9 @@
       .results {
         background: var(--card);
         position: absolute;
-        z-index: 1;
+        z-index: 20;
+        left: 0;
+        right: 0;
 
         margin: 8px 0 0;
         padding: 0;
@@ -287,6 +289,52 @@
         font-weight: bold;
       }
 
+      .bar {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .bar .btns {
+        flex-wrap: wrap;
+      }
+      .editbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        padding: 8px 16px;
+        background: #fff8d6;
+        border-bottom: 1px solid var(--line);
+        font-size: 0.85rem;
+      }
+      .editbar button {
+        padding: 5px 10px;
+      }
+      .uob-slip .field {
+        touch-action: none;
+      }
+      .uob-slip.editing .field {
+        outline: 1px dashed #0b3c7d;
+        cursor: move;
+        overflow: visible;
+        background: rgba(255, 221, 0, 0.25);
+      }
+      .uob-slip.editing .field.sel {
+        outline: 2px solid #d4380d;
+      }
+      .drag-handle {
+        position: absolute;
+        left: -20px;
+        top: -3px;
+        font-size: 16px;
+        line-height: 1;
+        padding: 0 2px;
+        color: #0b3c7d;
+        background: #fff;
+        border: 1px solid #0b3c7d;
+        border-radius: 3px;
+        user-select: none;
+      }
       @media (max-width: 900px) {
         .app {
           grid-template-columns: 1fr;
@@ -304,7 +352,8 @@
         }
         header,
         .form,
-        .bar {
+        .bar,
+        .editbar {
           display: none !important;
         }
         .app {
@@ -471,16 +520,37 @@
             >
               Background: Off
             </button>
+            <button
+              class="ghost"
+              id="moveToggle"
+              type="button"
+              aria-pressed="false"
+            >
+              ✥ Move fields
+            </button>
+            <button class="ghost" id="exportPdf" type="button">
+              Export PDF
+            </button>
             <button id="print" type="button">Print slip</button>
+          </span>
+        </div>
+        <div class="editbar hidden" id="editbar">
+          <span
+            >Drag a field by ✥, or click it and use arrow keys (Shift = 1
+            mm).</span
+          >
+          <span>
             <button class="ghost" id="saveCoords" type="button">
               Save positions
             </button>
+            <button class="ghost" id="resetCoords" type="button">Reset</button>
           </span>
         </div>
         <div id="preview-wrap"><div id="preview"></div></div>
       </div>
     </main>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="common/uob.config.js"></script>
     <script src="common/common.js"></script>
     <script src="variants/basic.js"></script>

@@ -31,8 +31,15 @@ window.UOBRenderer = {
 
       const el = document.createElement("div");
       el.className = "field " + key + (field.type === "check" ? " check" : "");
-      el.style.left = field.x + "mm";
-      el.style.top = field.y + "mm";
+      // ✓ moves to the chosen option's box (see UOBConfig.checkOffsets)
+      const table =
+        field.options || (window.UOBConfig.checkOffsets || {})[key] || {};
+      const off = (field.type === "check" && table[value]) || [0, 0];
+      el.dataset.key = key;
+      el.dataset.offx = off[0];
+      el.dataset.offy = off[1];
+      el.style.left = field.x + off[0] + "mm";
+      el.style.top = field.y + off[1] + "mm";
       el.style.fontSize = (field.fontSize || 9) + "pt";
       el.textContent = field.type === "check" ? "✓" : String(value);
       slip.appendChild(el);

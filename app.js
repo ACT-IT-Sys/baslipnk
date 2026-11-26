@@ -50,6 +50,7 @@
   let matches = [];
   let active = -1;
   let showBg = false;
+  const layoutDefaults = {}; // original x/y from the layout files, for Reset
   const BG_IMAGES = {
     basic: "assets/slip-basic.png",
     withCountry: "assets/slip-with-country.png",
@@ -218,13 +219,17 @@
   }
 
   function setActive(i) {
-    const items = $("results").children;
-    if (!items.length) return;
-    active = (i + items.length) % items.length;
-    Array.from(items).forEach((li, k) =>
-      li.setAttribute("aria-selected", String(k === active)),
+    const lists = [$("results"), $("resultsBar")].filter(
+      (l) => l && !l.classList.contains("hidden"),
     );
-    items[active].scrollIntoView({ block: "nearest" });
+    if (!matches.length || !lists.length) return;
+    active = (i + matches.length) % matches.length;
+    lists.forEach((l) => {
+      Array.from(l.children).forEach((li, k) =>
+        li.setAttribute("aria-selected", String(k === active)),
+      );
+      l.children[active]?.scrollIntoView({ block: "nearest" });
+    });
   }
 
   function choose(i) {
@@ -240,6 +245,7 @@
   }
 
   function fillForm(row) {
+    delete $("amountInWords").dataset.edited;
     FIELD_IDS.forEach((id) => ($(id).value = ""));
     const data = window.UOBCommon.normalizeRow(row);
     Object.keys(data).forEach((key) => {
@@ -251,22 +257,64 @@
 
   // ---- Amount in words ------------------------------------------------
   function numberToWords(n) {
+    n = Number(String(n).replace(/,/g, "")); // allow 1,500,000
     if (!n || isNaN(n)) return "";
-    const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
-    const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+    const ones = [
+      "",
+      "One",
+      "Two",
+      "Three",
+      "Four",
+      "Five",
+      "Six",
+      "Seven",
+      "Eight",
+      "Nine",
+      "Ten",
+      "Eleven",
+      "Twelve",
+      "Thirteen",
+      "Fourteen",
+      "Fifteen",
+      "Sixteen",
+      "Seventeen",
+      "Eighteen",
+      "Nineteen",
+    ];
+    const tens = [
+      "",
+      "",
+      "Twenty",
+      "Thirty",
+      "Forty",
+      "Fifty",
+      "Sixty",
+      "Seventy",
+      "Eighty",
+      "Ninety",
+    ];
     function under1000(num) {
       if (num < 20) return ones[num];
-      if (num < 100) return tens[Math.floor(num / 10)] + (num % 10 ? " " + ones[num % 10] : "");
-      return ones[Math.floor(num / 100)] + " Hundred" + (num % 100 ? " " + under1000(num % 100) : "");
+      if (num < 100)
+        return (
+          tens[Math.floor(num / 10)] + (num % 10 ? " " + ones[num % 10] : "")
+        );
+      return (
+        ones[Math.floor(num / 100)] +
+        " Hundred" +
+        (num % 100 ? " " + under1000(num % 100) : "")
+      );
     }
     const num = Math.floor(Number(n));
     if (num === 0) return "Zero";
     const parts = [];
     const scales = ["", "Thousand", "Million", "Billion"];
-    let i = 0, rest = num;
+    let i = 0,
+      rest = num;
     while (rest > 0) {
       const chunk = rest % 1000;
-      if (chunk) parts.unshift(under1000(chunk) + (scales[i] ? " " + scales[i] : ""));
+      if (chunk)
+        parts.unshift(under1000(chunk) + (scales[i] ? " " + scales[i] : ""));
       rest = Math.floor(rest / 1000);
       i++;
     }
@@ -280,12 +328,17 @@
     Object.keys(layout.fields).forEach((k) => {
       payload[k] = { x: layout.fields[k].x, y: layout.fields[k].y };
     });
-    localStorage.setItem(window.UOBConfig.coordStorageKey + variant, JSON.stringify(payload));
+    localStorage.setItem(
+      window.UOBConfig.coordStorageKey + variant,
+      JSON.stringify(payload),
+    );
   }
 
   function loadCoordsFromLocal(variant) {
     try {
-      const raw = localStorage.getItem(window.UOBConfig.coordStorageKey + variant);
+      const raw = localStorage.getItem(
+        window.UOBConfig.coordStorageKey + variant,
+      );
       if (!raw) return;
       const saved = JSON.parse(raw);
       const layout = window.UOBCommon.getLayout(variant);
@@ -311,12 +364,14 @@
       fontSize: layout.fields[k].fontSize || 9,
       updated: new Date().toISOString(),
     }));
-    const res = await fetch(url, {
+    // Apps Script can't answer a CORS preflight, so send a "simple" request
+    // (text/plain, no-cors). The browser can't read the reply, so success is assumed.
+    await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ sheet: "Coordinate", rows }),
     });
-    if (!res.ok) throw new Error(res.status);
     return { ok: true };
   }
 
@@ -326,62 +381,163 @@
     postCoords(variant)
       .then((r) => {
         if (r.skipped) alert("Positions saved locally.");
-        else alert("Positions saved locally and posted to Coordinate sheet.");
+        else
+          alert(
+            "Positions saved locally and sent to the Coordinate sheet (cannot be confirmed from the browser).",
+          );
       })
       .catch(() => alert("Local save ok. Post to sheet failed."));
   }
 
-  // ---- Drag handles ---------------------------------------------------
+  // ---- Move fields (edit mode) ----------------------------------------
   let dragMode = false;
+  let selected = null; // layout key of the selected field
+  const MM_PER_PX = 25.4 / 96;
+
+  function setDragMode(on) {
+    dragMode = on;
+    if (!on) selected = null;
+    const b = $("moveToggle");
+    b.setAttribute("aria-pressed", String(on));
+    b.textContent = on ? "✥ Moving: On" : "✥ Move fields";
+    $("editbar").classList.toggle("hidden", !on);
+    renderSlip();
+  }
+
+  function selectField(key) {
+    selected = key;
+    document
+      .querySelectorAll(".uob-slip .field")
+      .forEach((f) => f.classList.toggle("sel", f.dataset.key === key));
+  }
+
+  // Store the field's base x/y (the on-screen position minus any ✓ option offset).
+  function commitPosition(el) {
+    const variant = $("variant").value;
+    const f = window.UOBCommon.getLayout(variant)?.fields[el.dataset.key];
+    if (!f) return;
+    f.x = +(parseFloat(el.style.left) - (+el.dataset.offx || 0)).toFixed(1);
+    f.y = +(parseFloat(el.style.top) - (+el.dataset.offy || 0)).toFixed(1);
+    saveCoordsToLocal(variant);
+  }
+
   function enableDrag() {
-    dragMode = true;
     const slip = document.querySelector(".uob-slip");
     if (!slip) return;
-    slip.style.outline = "2px dashed #0b3c7d";
+    slip.classList.add("editing");
     slip.querySelectorAll(".field").forEach((el) => {
-      if (el.querySelector(".drag-handle")) return;
       const h = document.createElement("span");
       h.className = "drag-handle no-print";
       h.textContent = "✥";
       h.title = "Drag to move";
-      h.style.cssText = "position:absolute;left:-18px;top:-4px;cursor:move;font-size:16px;color:#0b3c7d;background:#fff;border:1px solid #0b3c7d;border-radius:3px;padding:0 2px;user-select:none;z-index:20;line-height:1;";
-      el.style.position = "absolute";
       el.appendChild(h);
-      let startX, startY, origX, origY;
-      h.addEventListener("mousedown", (e) => {
+      el.addEventListener("pointerdown", (e) => {
         e.preventDefault();
-        e.stopPropagation();
-        startX = e.clientX;
-        startY = e.clientY;
-        origX = parseFloat(el.style.left) || 0;
-        origY = parseFloat(el.style.top) || 0;
-        const onMove = (ev) => {
-          const dx = (ev.clientX - startX) * 0.264583;
-          const dy = (ev.clientY - startY) * 0.264583;
-          el.style.left = (origX + dx).toFixed(1) + "mm";
-          el.style.top = (origY + dy).toFixed(1) + "mm";
+        selectField(el.dataset.key);
+        el.setPointerCapture(e.pointerId);
+        const sx = e.clientX,
+          sy = e.clientY;
+        const ox = parseFloat(el.style.left),
+          oy = parseFloat(el.style.top);
+        // The preview is CSS-zoomed to fit, so convert screen px -> slip mm.
+        const k = MM_PER_PX / (parseFloat($("preview").style.zoom) || 1);
+        const move = (ev) => {
+          el.style.left = (ox + (ev.clientX - sx) * k).toFixed(1) + "mm";
+          el.style.top = (oy + (ev.clientY - sy) * k).toFixed(1) + "mm";
         };
-        const onUp = () => {
-          document.removeEventListener("mousemove", onMove);
-          document.removeEventListener("mouseup", onUp);
-          const key = [...el.classList].find((c) => c !== "field" && c !== "check");
-          const layout = window.UOBCommon.getLayout($("variant").value);
-          if (layout && layout.fields[key]) {
-            layout.fields[key].x = parseFloat(el.style.left);
-            layout.fields[key].y = parseFloat(el.style.top);
-            saveCoordsToLocal($("variant").value);
-          }
+        const up = () => {
+          el.removeEventListener("pointermove", move);
+          el.removeEventListener("pointerup", up);
+          el.removeEventListener("pointercancel", up);
+          commitPosition(el);
         };
-        document.addEventListener("mousemove", onMove);
-        document.addEventListener("mouseup", onUp);
+        el.addEventListener("pointermove", move);
+        el.addEventListener("pointerup", up);
+        el.addEventListener("pointercancel", up);
       });
     });
+    if (selected) selectField(selected);
   }
-  function disableDrag() {
-    dragMode = false;
+
+  function nudgeSelected(e) {
+    if (!dragMode || !selected || !e.key.startsWith("Arrow")) return;
+    if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+    const el = document.querySelector(
+      `.uob-slip .field[data-key="${selected}"]`,
+    );
+    if (!el) return;
+    e.preventDefault();
+    const s = e.shiftKey ? 1 : 0.1;
+    const dx = e.key === "ArrowLeft" ? -s : e.key === "ArrowRight" ? s : 0;
+    const dy = e.key === "ArrowUp" ? -s : e.key === "ArrowDown" ? s : 0;
+    el.style.left = (parseFloat(el.style.left) + dx).toFixed(1) + "mm";
+    el.style.top = (parseFloat(el.style.top) + dy).toFixed(1) + "mm";
+    commitPosition(el);
+  }
+
+  function resetPositions() {
+    const variant = $("variant").value;
+    const layout = window.UOBCommon.getLayout(variant);
+    const d = layoutDefaults[variant] || {};
+    Object.keys(d).forEach((k) => {
+      layout.fields[k].x = d[k].x;
+      layout.fields[k].y = d[k].y;
+    });
+    localStorage.removeItem(window.UOBConfig.coordStorageKey + variant);
+    renderSlip();
+  }
+
+  // ---- PDF export (jsPDF, vector text at the same mm positions) --------
+  function exportPdf() {
+    if (!window.jspdf) {
+      alert("PDF library did not load. Check your connection and reload.");
+      return;
+    }
+    if (dragMode) setDragMode(false);
     const slip = document.querySelector(".uob-slip");
-    if (slip) slip.style.outline = "";
-    document.querySelectorAll(".drag-handle").forEach((h) => h.remove());
+    const w = parseFloat(slip.style.width),
+      h = parseFloat(slip.style.height);
+    const doc = new window.jspdf.jsPDF({
+      unit: "mm",
+      format: [w, h],
+      orientation: w > h ? "l" : "p",
+    });
+    // Follows the Background toggle (off = text only, like Print).
+    const bg = slip.querySelector(".slip-bg");
+    if (bg && bg.complete && bg.naturalWidth)
+      doc.addImage(bg, "PNG", 0, 0, w, h, undefined, "FAST");
+    const PT = 25.4 / 72; // mm per pt
+    slip.querySelectorAll(".field").forEach((el) => {
+      const fs = parseFloat(el.style.fontSize) || 9;
+      const em = fs * PT;
+      const x = parseFloat(el.style.left),
+        y = parseFloat(el.style.top);
+      if (el.classList.contains("check")) {
+        // Helvetica has no ✓, so draw it as a vector tick.
+        doc.setDrawColor(0);
+        doc.setLineWidth(em * 0.09);
+        doc.lines(
+          [
+            [em * 0.25, em * 0.25],
+            [em * 0.5, -em * 0.65],
+          ],
+          x + em * 0.1,
+          y + em * 0.55,
+          [1, 1],
+          "S",
+        );
+        return;
+      }
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(fs);
+      doc.setTextColor(0);
+      doc.text(el.textContent, x, y + em * 0.897); // baseline = top + ascent
+    });
+    const name = ($("beneficiaryName").value || "slip").replace(
+      /[^\w-]+/g,
+      "_",
+    );
+    doc.save(`UOB-${name}-${$("date").value || "nodate"}.pdf`);
   }
 
   // ---- Slip -----------------------------------------------------------
@@ -393,10 +549,20 @@
       .forEach((el) => el.classList.toggle("hidden", !isCountry));
     const data = {};
     FIELD_IDS.forEach((id) => (data[id] = $(id).value));
+    // In Move mode, show every field (empty ones as their name) so each can be placed.
+    if (dragMode)
+      Object.keys(window.UOBCommon.getLayout(variant).fields).forEach((k) => {
+        if (
+          !data[k] &&
+          !["date", "transferType", "beneficiaryType"].includes(k)
+        )
+          data[k] = k;
+      });
     const slip = window.UOBRenderer.render(data, variant, {
       date: $("date").value,
-      transferType: $("transferType").value,
-      beneficiaryType: $("beneficiaryType").value,
+      transferType: $("transferType").value || (dragMode ? "TT" : ""),
+      beneficiaryType:
+        $("beneficiaryType").value || (dragMode ? "Corporate" : ""),
     });
     if (showBg && BG_IMAGES[variant]) {
       const bg = document.createElement("img");
@@ -445,9 +611,11 @@
       if (e.target.id !== "q") {
         if (e.target.id === "amount") {
           const words = numberToWords(e.target.value);
-          if (words && !$("amountInWords").dataset.edited) $("amountInWords").value = words;
+          if (!$("amountInWords").dataset.edited)
+            $("amountInWords").value = words;
         }
-        if (e.target.id === "amountInWords") $("amountInWords").dataset.edited = "1";
+        if (e.target.id === "amountInWords")
+          $("amountInWords").dataset.edited = "1";
         renderSlip();
       }
     });
@@ -479,21 +647,33 @@
 
     // Bar search shares the same result builder
     const qBar = $("qBar");
-    if (qBar) {
-      qBar.addEventListener("input", () => {
-        $("q").value = qBar.value;
+    qBar.addEventListener("input", () => {
+      $("q").value = qBar.value;
+      renderResults();
+    });
+    qBar.addEventListener("focus", renderResults);
+    qBar.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActive(active + 1);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActive(active - 1);
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        choose(active);
+      } else if (e.key === "Escape") {
+        qBar.value = "";
+        $("q").value = "";
         renderResults();
-      });
-      qBar.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          choose(active);
-          qBar.value = "";
-          $("q").value = "";
-          renderResults();
-        }
-      });
-    }
+      }
+    });
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".search"))
+        ["results", "resultsBar"].forEach((id) =>
+          $(id).classList.add("hidden"),
+        );
+    });
 
     $("loadCsv").addEventListener("click", () => $("csvFile").click());
     $("csvFile").addEventListener("change", async (e) => {
@@ -505,6 +685,7 @@
 
     $("clear").addEventListener("click", () => {
       FIELD_IDS.forEach((id) => ($(id).value = ""));
+      delete $("amountInWords").dataset.edited;
       $("filled").classList.add("hidden");
       renderSlip();
     });
@@ -517,13 +698,23 @@
     $("print").addEventListener("click", () => window.print());
     $("saveCoords").addEventListener("click", savePositions);
 
-    // Load any previously saved positions for the default variant
-    loadCoordsFromLocal(cfg.defaultVariant);
+    $("moveToggle").addEventListener("click", () => setDragMode(!dragMode));
+    $("resetCoords").addEventListener("click", resetPositions);
+    $("exportPdf").addEventListener("click", exportPdf);
+    document.addEventListener("keydown", nudgeSelected);
+    window.addEventListener(
+      "beforeprint",
+      () => dragMode && setDragMode(false),
+    );
 
-    $("preview-wrap").addEventListener("click", (e) => {
-      if (e.target.closest(".drag-handle")) return;
-      if (dragMode) disableDrag();
-      else enableDrag();
+    // Remember the file defaults (for Reset), then apply saved positions
+    Object.keys(window.UOBLayouts).forEach((v) => {
+      layoutDefaults[v] = {};
+      Object.keys(window.UOBLayouts[v].fields).forEach((k) => {
+        const f = window.UOBLayouts[v].fields[k];
+        layoutDefaults[v][k] = { x: f.x, y: f.y };
+      });
+      loadCoordsFromLocal(v);
     });
 
     renderSlip();
