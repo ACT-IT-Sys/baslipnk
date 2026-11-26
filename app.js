@@ -337,12 +337,14 @@
     dragMode = true;
     const slip = document.querySelector(".uob-slip");
     if (!slip) return;
+    slip.style.outline = "2px dashed #0b3c7d";
     slip.querySelectorAll(".field").forEach((el) => {
       if (el.querySelector(".drag-handle")) return;
       const h = document.createElement("span");
       h.className = "drag-handle no-print";
       h.textContent = "✥";
-      h.style.cssText = "position:absolute;left:-14px;top:-2px;cursor:move;font-size:12px;color:#0b3c7d;user-select:none;z-index:10;";
+      h.title = "Drag to move";
+      h.style.cssText = "position:absolute;left:-18px;top:-4px;cursor:move;font-size:16px;color:#0b3c7d;background:#fff;border:1px solid #0b3c7d;border-radius:3px;padding:0 2px;user-select:none;z-index:20;line-height:1;";
       el.style.position = "absolute";
       el.appendChild(h);
       let startX, startY, origX, origY;
@@ -354,7 +356,7 @@
         origX = parseFloat(el.style.left) || 0;
         origY = parseFloat(el.style.top) || 0;
         const onMove = (ev) => {
-          const dx = (ev.clientX - startX) * 0.264583; // px → mm approx
+          const dx = (ev.clientX - startX) * 0.264583;
           const dy = (ev.clientY - startY) * 0.264583;
           el.style.left = (origX + dx).toFixed(1) + "mm";
           el.style.top = (origY + dy).toFixed(1) + "mm";
@@ -377,6 +379,8 @@
   }
   function disableDrag() {
     dragMode = false;
+    const slip = document.querySelector(".uob-slip");
+    if (slip) slip.style.outline = "";
     document.querySelectorAll(".drag-handle").forEach((h) => h.remove());
   }
 
