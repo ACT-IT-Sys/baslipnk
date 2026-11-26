@@ -430,6 +430,14 @@
           <label>Correspondent bank <input id="correspondentBank" /></label>
         </section>
 
+        <section>
+          <h2>6. Amount</h2>
+          <label
+            >Amount <input id="amount" type="text" inputmode="decimal"
+          /></label>
+          <label>In words <input id="amountInWords" /></label>
+        </section>
+
         <div>
           <button class="ghost" id="clear" type="button">
             Clear all fields
@@ -464,6 +472,9 @@
               Background: Off
             </button>
             <button id="print" type="button">Print slip</button>
+            <button class="ghost" id="saveCoords" type="button">
+              Save positions
+            </button>
           </span>
         </div>
         <div id="preview-wrap"><div id="preview"></div></div>

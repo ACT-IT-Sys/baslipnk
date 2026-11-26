@@ -43,6 +43,8 @@
     "bankCountry",
     "swiftCode",
     "correspondentBank",
+    "amount",
+    "amountInWords",
   ];
   let records = [];
   let matches = [];
@@ -247,6 +249,137 @@
     renderSlip();
   }
 
+  // ---- Amount in words ------------------------------------------------
+  function numberToWords(n) {
+    if (!n || isNaN(n)) return "";
+    const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+    const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+    function under1000(num) {
+      if (num < 20) return ones[num];
+      if (num < 100) return tens[Math.floor(num / 10)] + (num % 10 ? " " + ones[num % 10] : "");
+      return ones[Math.floor(num / 100)] + " Hundred" + (num % 100 ? " " + under1000(num % 100) : "");
+    }
+    const num = Math.floor(Number(n));
+    if (num === 0) return "Zero";
+    const parts = [];
+    const scales = ["", "Thousand", "Million", "Billion"];
+    let i = 0, rest = num;
+    while (rest > 0) {
+      const chunk = rest % 1000;
+      if (chunk) parts.unshift(under1000(chunk) + (scales[i] ? " " + scales[i] : ""));
+      rest = Math.floor(rest / 1000);
+      i++;
+    }
+    return parts.join(" ").trim();
+  }
+
+  function saveCoordsToLocal(variant) {
+    const layout = window.UOBCommon.getLayout(variant);
+    if (!layout) return;
+    const payload = {};
+    Object.keys(layout.fields).forEach((k) => {
+      payload[k] = { x: layout.fields[k].x, y: layout.fields[k].y };
+    });
+    localStorage.setItem(window.UOBConfig.coordStorageKey + variant, JSON.stringify(payload));
+  }
+
+  function loadCoordsFromLocal(variant) {
+    try {
+      const raw = localStorage.getItem(window.UOBConfig.coordStorageKey + variant);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      const layout = window.UOBCommon.getLayout(variant);
+      if (!layout) return;
+      Object.keys(saved).forEach((k) => {
+        if (layout.fields[k]) {
+          layout.fields[k].x = saved[k].x;
+          layout.fields[k].y = saved[k].y;
+        }
+      });
+    } catch (e) {}
+  }
+
+  async function postCoords(variant) {
+    const url = window.UOBConfig.coordPostUrl;
+    if (!url) return { ok: true, skipped: true };
+    const layout = window.UOBCommon.getLayout(variant);
+    const rows = Object.keys(layout.fields).map((k) => ({
+      variant,
+      field: k,
+      x: layout.fields[k].x,
+      y: layout.fields[k].y,
+      fontSize: layout.fields[k].fontSize || 9,
+      updated: new Date().toISOString(),
+    }));
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sheet: "Coordinate", rows }),
+    });
+    if (!res.ok) throw new Error(res.status);
+    return { ok: true };
+  }
+
+  function savePositions() {
+    const variant = $("variant").value;
+    saveCoordsToLocal(variant);
+    postCoords(variant)
+      .then((r) => {
+        if (r.skipped) alert("Positions saved locally.");
+        else alert("Positions saved locally and posted to Coordinate sheet.");
+      })
+      .catch(() => alert("Local save ok. Post to sheet failed."));
+  }
+
+  // ---- Drag handles ---------------------------------------------------
+  let dragMode = false;
+  function enableDrag() {
+    dragMode = true;
+    const slip = document.querySelector(".uob-slip");
+    if (!slip) return;
+    slip.querySelectorAll(".field").forEach((el) => {
+      if (el.querySelector(".drag-handle")) return;
+      const h = document.createElement("span");
+      h.className = "drag-handle no-print";
+      h.textContent = "✥";
+      h.style.cssText = "position:absolute;left:-14px;top:-2px;cursor:move;font-size:12px;color:#0b3c7d;user-select:none;z-index:10;";
+      el.style.position = "absolute";
+      el.appendChild(h);
+      let startX, startY, origX, origY;
+      h.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        startX = e.clientX;
+        startY = e.clientY;
+        origX = parseFloat(el.style.left) || 0;
+        origY = parseFloat(el.style.top) || 0;
+        const onMove = (ev) => {
+          const dx = (ev.clientX - startX) * 0.264583; // px → mm approx
+          const dy = (ev.clientY - startY) * 0.264583;
+          el.style.left = (origX + dx).toFixed(1) + "mm";
+          el.style.top = (origY + dy).toFixed(1) + "mm";
+        };
+        const onUp = () => {
+          document.removeEventListener("mousemove", onMove);
+          document.removeEventListener("mouseup", onUp);
+          const key = [...el.classList].find((c) => c !== "field" && c !== "check");
+          const layout = window.UOBCommon.getLayout($("variant").value);
+          if (layout && layout.fields[key]) {
+            layout.fields[key].x = parseFloat(el.style.left);
+            layout.fields[key].y = parseFloat(el.style.top);
+            saveCoordsToLocal($("variant").value);
+          }
+        };
+        document.addEventListener("mousemove", onMove);
+        document.addEventListener("mouseup", onUp);
+      });
+    });
+  }
+  function disableDrag() {
+    dragMode = false;
+    document.querySelectorAll(".drag-handle").forEach((h) => h.remove());
+  }
+
   // ---- Slip -----------------------------------------------------------
   function renderSlip() {
     const variant = $("variant").value;
@@ -272,6 +405,7 @@
     prev.innerHTML = "";
     prev.appendChild(slip);
     fitPreview(slip);
+    if (dragMode) enableDrag();
   }
 
   function fitPreview(slip) {
@@ -304,10 +438,20 @@
     $("variant").value = cfg.defaultVariant;
 
     document.querySelector(".form").addEventListener("input", (e) => {
-      if (e.target.id !== "q") renderSlip();
+      if (e.target.id !== "q") {
+        if (e.target.id === "amount") {
+          const words = numberToWords(e.target.value);
+          if (words && !$("amountInWords").dataset.edited) $("amountInWords").value = words;
+        }
+        if (e.target.id === "amountInWords") $("amountInWords").dataset.edited = "1";
+        renderSlip();
+      }
     });
     document.querySelector(".form").addEventListener("change", (e) => {
-      if (e.target.id !== "csvFile") renderSlip();
+      if (e.target.id !== "csvFile") {
+        if (e.target.id === "variant") loadCoordsFromLocal(e.target.value);
+        renderSlip();
+      }
     });
     window.addEventListener("resize", renderSlip);
 
@@ -367,6 +511,16 @@
       renderSlip();
     });
     $("print").addEventListener("click", () => window.print());
+    $("saveCoords").addEventListener("click", savePositions);
+
+    // Load any previously saved positions for the default variant
+    loadCoordsFromLocal(cfg.defaultVariant);
+
+    $("preview-wrap").addEventListener("click", (e) => {
+      if (e.target.closest(".drag-handle")) return;
+      if (dragMode) disableDrag();
+      else enableDrag();
+    });
 
     renderSlip();
     loadFiles();

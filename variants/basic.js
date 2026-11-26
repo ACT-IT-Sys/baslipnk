@@ -23,5 +23,7 @@ window.UOBLayouts.basic = {
     beneficiaryBankAddress: { x: 77.5, y: 160, fontSize: 8 },
     swiftCode: { x: 48.5, y: 165, fontSize: 9 },
     correspondentBank: { x: 66, y: 169.5, fontSize: 8 },
+    amount: { x: 40, y: 190, fontSize: 9 },
+    amountInWords: { x: 40, y: 198, fontSize: 8 },
   },
 };

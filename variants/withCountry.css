@@ -92,3 +92,13 @@
   left: 66mm;
   font-size: 8pt;
 }
+.uob-slip.withCountry .field.amount {
+  top: 195mm;
+  left: 40mm;
+  font-size: 9pt;
+}
+.uob-slip.withCountry .field.amountInWords {
+  top: 203mm;
+  left: 40mm;
+  font-size: 8pt;
+}

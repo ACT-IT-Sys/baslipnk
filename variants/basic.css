@@ -72,3 +72,13 @@
   left: 66mm;
   font-size: 8pt;
 }
+.uob-slip.basic .field.amount {
+  top: 190mm;
+  left: 40mm;
+  font-size: 9pt;
+}
+.uob-slip.basic .field.amountInWords {
+  top: 198mm;
+  left: 40mm;
+  font-size: 8pt;
+}

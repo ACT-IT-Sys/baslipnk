@@ -27,5 +27,7 @@ window.UOBLayouts.withCountry = {
     bankCountry: { x: 115.5, y: 169.5, fontSize: 9 },
     swiftCode: { x: 45, y: 174.5, fontSize: 9 },
     correspondentBank: { x: 64, y: 179, fontSize: 8 },
+    amount: { x: 40, y: 195, fontSize: 9 },
+    amountInWords: { x: 40, y: 203, fontSize: 8 },
   },
 };
