@@ -5,22 +5,90 @@
   height: 241.6mm;
 }
 
-.uob-slip.withCountry .field.date          { top: 16mm; left: 148mm; font-size: 9pt; }
-.uob-slip.withCountry .field.transferType  { top: 28mm; left: 148mm; font-size: 9pt; }
+.uob-slip.withCountry .field.date {
+  top: 14.5mm;
+  left: 154mm;
+  font-size: 9pt;
+}
+.uob-slip.withCountry .field.transferType {
+  top: 28.5mm;
+  left: 161.5mm;
+  font-size: 14pt;
+}
 
-.uob-slip.withCountry .field.remitterAccount     { top: 142mm; left: 52mm; font-size: 9pt; }
-.uob-slip.withCountry .field.remitterName        { top: 150mm; left: 52mm; font-size: 9pt; }
-.uob-slip.withCountry .field.remitterDescription { top: 158mm; left: 52mm; font-size: 9pt; }
+.uob-slip.withCountry .field.remitterAccount {
+  top: 123.5mm;
+  left: 49mm;
+  font-size: 9pt;
+}
+.uob-slip.withCountry .field.remitterName {
+  top: 127mm;
+  left: 35.5mm;
+  font-size: 9pt;
+}
+.uob-slip.withCountry .field.remitterDescription {
+  top: 131.5mm;
+  left: 40.5mm;
+  font-size: 9pt;
+}
 
-.uob-slip.withCountry .field.beneficiaryType     { top: 172mm; left: 52mm; font-size: 9pt; }
-.uob-slip.withCountry .field.beneficiaryName     { top: 182mm; left: 52mm; font-size: 9pt; }
-.uob-slip.withCountry .field.beneficiaryAddress  { top: 190mm; left: 52mm; font-size: 8pt; }
-.uob-slip.withCountry .field.beneficiaryCity     { top: 198mm; left: 52mm; font-size: 9pt; }
-.uob-slip.withCountry .field.beneficiaryCountry  { top: 198mm; left: 118mm; font-size: 9pt; }
-.uob-slip.withCountry .field.beneficiaryBank     { top: 206mm; left: 52mm; font-size: 9pt; }
-.uob-slip.withCountry .field.beneficiaryAccount  { top: 214mm; left: 52mm; font-size: 9pt; }
-.uob-slip.withCountry .field.beneficiaryBankAddress { top: 222mm; left: 52mm; font-size: 8pt; }
-.uob-slip.withCountry .field.bankCity            { top: 230mm; left: 52mm; font-size: 9pt; }
-.uob-slip.withCountry .field.bankCountry         { top: 230mm; left: 118mm; font-size: 9pt; }
-.uob-slip.withCountry .field.swiftCode           { top: 238mm; left: 52mm; font-size: 9pt; }
-.uob-slip.withCountry .field.correspondentBank   { top: 246mm; left: 52mm; font-size: 8pt; }
+.uob-slip.withCountry .field.beneficiaryType {
+  top: 135.5mm;
+  left: 134.5mm;
+  font-size: 14pt;
+}
+.uob-slip.withCountry .field.beneficiaryName {
+  top: 142.5mm;
+  left: 35.5mm;
+  font-size: 9pt;
+}
+.uob-slip.withCountry .field.beneficiaryAddress {
+  top: 147.5mm;
+  left: 38.5mm;
+  font-size: 8pt;
+}
+.uob-slip.withCountry .field.beneficiaryCity {
+  top: 156.5mm;
+  left: 31mm;
+  font-size: 9pt;
+}
+.uob-slip.withCountry .field.beneficiaryCountry {
+  top: 156.5mm;
+  left: 115.5mm;
+  font-size: 9pt;
+}
+.uob-slip.withCountry .field.beneficiaryBank {
+  top: 152mm;
+  left: 58mm;
+  font-size: 9pt;
+}
+.uob-slip.withCountry .field.beneficiaryAccount {
+  top: 161mm;
+  left: 82mm;
+  font-size: 9pt;
+}
+.uob-slip.withCountry .field.beneficiaryBankAddress {
+  top: 165.5mm;
+  left: 77.5mm;
+  font-size: 8pt;
+}
+.uob-slip.withCountry .field.bankCity {
+  top: 169.5mm;
+  left: 31mm;
+  font-size: 9pt;
+}
+.uob-slip.withCountry .field.bankCountry {
+  top: 169.5mm;
+  left: 115.5mm;
+  font-size: 9pt;
+}
+.uob-slip.withCountry .field.swiftCode {
+  top: 174.5mm;
+  left: 48.5mm;
+  font-size: 9pt;
+}
+.uob-slip.withCountry .field.correspondentBank {
+  top: 179mm;
+  left: 66mm;
+  font-size: 8pt;
+}

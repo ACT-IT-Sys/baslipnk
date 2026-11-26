@@ -47,7 +47,7 @@
   let records = [];
   let matches = [];
   let active = -1;
-  let showBg = false;
+  let showBg = true;
   const BG_IMAGES = {
     basic: "assets/slip-basic.png",
     withCountry: "assets/slip-with-country.png",

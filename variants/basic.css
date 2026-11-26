@@ -17,58 +17,58 @@
 }
 
 .uob-slip.basic .field.remitterAccount {
-  top: 142mm;
+  top: 123mm;
   left: 52mm;
   font-size: 9pt;
 }
 .uob-slip.basic .field.remitterName {
-  top: 150mm;
-  left: 52mm;
+  top: 127mm;
+  left: 37.5mm;
   font-size: 9pt;
 }
 .uob-slip.basic .field.remitterDescription {
-  top: 158mm;
-  left: 52mm;
+  top: 131mm;
+  left: 43mm;
   font-size: 9pt;
 }
 
 .uob-slip.basic .field.beneficiaryType {
-  top: 172mm;
-  left: 52mm;
-  font-size: 9pt;
+  top: 135.5mm;
+  left: 136mm;
+  font-size: 14pt;
 }
 .uob-slip.basic .field.beneficiaryName {
-  top: 182mm;
-  left: 52mm;
+  top: 142mm;
+  left: 37mm;
   font-size: 9pt;
 }
 .uob-slip.basic .field.beneficiaryAddress {
-  top: 190mm;
-  left: 52mm;
+  top: 146.5mm;
+  left: 41mm;
   font-size: 8pt;
 }
 .uob-slip.basic .field.beneficiaryBank {
-  top: 198mm;
-  left: 52mm;
+  top: 151mm;
+  left: 60mm;
   font-size: 9pt;
 }
 .uob-slip.basic .field.beneficiaryAccount {
-  top: 206mm;
-  left: 52mm;
+  top: 156mm;
+  left: 84mm;
   font-size: 9pt;
 }
 .uob-slip.basic .field.beneficiaryBankAddress {
-  top: 214mm;
-  left: 52mm;
+  top: 160mm;
+  left: 77.5mm;
   font-size: 8pt;
 }
 .uob-slip.basic .field.swiftCode {
-  top: 222mm;
-  left: 52mm;
+  top: 165mm;
+  left: 48.5mm;
   font-size: 9pt;
 }
 .uob-slip.basic .field.correspondentBank {
-  top: 230mm;
-  left: 52mm;
+  top: 169.5mm;
+  left: 66mm;
   font-size: 8pt;
 }
