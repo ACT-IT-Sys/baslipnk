@@ -157,49 +157,62 @@
     parent.append(text.slice(0, i), m, text.slice(i + term.length));
   }
 
-  function renderResults() {
-    const term = $("q").value.trim();
-    const list = $("results");
+  function buildResultItem(m, i, term) {
+    const li = document.createElement("li");
+    li.className = "opt";
+    li.setAttribute("role", "option");
+    li.tabIndex = -1;
+    li.setAttribute("aria-selected", String(i === active));
+    const name = document.createElement("div");
+    name.className = "name";
+    if (m.col === TITLE_COLUMN) highlight(name, m.v, term);
+    else
+      name.textContent =
+        m.rec.row[TITLE_COLUMN] || m.rec.row["Remitter Name"] || "(no name)";
+    const sub = document.createElement("div");
+    sub.className = "sub";
+    const tag = document.createElement("span");
+    tag.className = "col";
+    tag.textContent = m.col;
+    sub.append(tag);
+    if (m.col !== TITLE_COLUMN) highlight(sub, m.v, term);
+    else sub.append(m.rec.row[SUBTITLE_COLUMN] || "");
+    li.append(name, sub);
+    li.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      choose(i);
+    });
+    return li;
+  }
+
+  function renderResultsInto(list, term) {
     list.innerHTML = "";
-    matches = search(term);
-    active = matches.length ? 0 : -1;
-    $("q").setAttribute("aria-expanded", String(!!term));
     if (!term) {
       list.classList.add("hidden");
-      $("count").textContent = "";
       return;
     }
     list.classList.remove("hidden");
-    $("count").textContent = matches.length
-      ? `${matches.length} match${matches.length === 1 ? "" : "es"}`
-      : "No matches. Check the spelling or load another CSV.";
-    matches.forEach((m, i) => {
-      const li = document.createElement("li");
-      li.className = "opt";
-      li.setAttribute("role", "option");
-      li.tabIndex = -1;
-      li.setAttribute("aria-selected", String(i === active));
-      const name = document.createElement("div");
-      name.className = "name";
-      if (m.col === TITLE_COLUMN) highlight(name, m.v, term);
-      else
-        name.textContent =
-          m.rec.row[TITLE_COLUMN] || m.rec.row["Remitter Name"] || "(no name)";
-      const sub = document.createElement("div");
-      sub.className = "sub";
-      const tag = document.createElement("span");
-      tag.className = "col";
-      tag.textContent = m.col;
-      sub.append(tag);
-      if (m.col !== TITLE_COLUMN) highlight(sub, m.v, term);
-      else sub.append(m.rec.row[SUBTITLE_COLUMN] || "");
-      li.append(name, sub);
-      li.addEventListener("mousedown", (e) => {
-        e.preventDefault();
-        choose(i);
-      });
-      list.appendChild(li);
-    });
+    matches.forEach((m, i) => list.appendChild(buildResultItem(m, i, term)));
+  }
+
+  function renderResults() {
+    const term = ($("q").value || $("qBar")?.value || "").trim();
+    matches = search(term);
+    active = matches.length ? 0 : -1;
+    const mainList = $("results");
+    const barList = $("resultsBar");
+    renderResultsInto(mainList, term);
+    if (barList) renderResultsInto(barList, term);
+    if ($("q")) $("q").setAttribute("aria-expanded", String(!!term));
+    if ($("qBar")) $("qBar").setAttribute("aria-expanded", String(!!term));
+    if (!term) {
+      if ($("count")) $("count").textContent = "";
+      return;
+    }
+    if ($("count"))
+      $("count").textContent = matches.length
+        ? `${matches.length} match${matches.length === 1 ? "" : "es"}`
+        : "No matches. Check the spelling or load another CSV.";
   }
 
   function setActive(i) {
@@ -217,6 +230,7 @@
     if (!m) return;
     fillForm(m.rec.row);
     $("q").value = "";
+    if ($("qBar")) $("qBar").value = "";
     renderResults();
     const f = $("filled");
     f.textContent = `Filled from: ${m.rec.row[TITLE_COLUMN] || m.rec.row["Remitter Name"] || "selected row"}. Review the fields below.`;
@@ -315,22 +329,20 @@
       }
     });
 
-    // Bar search reuses the same results logic
+    // Bar search shares the same result builder
     const qBar = $("qBar");
-    const resultsBar = $("resultsBar");
-    if (qBar && resultsBar) {
+    if (qBar) {
       qBar.addEventListener("input", () => {
         $("q").value = qBar.value;
         renderResults();
-        // mirror results into bar list
-        resultsBar.innerHTML = $("results").innerHTML;
-        resultsBar.classList.toggle("hidden", $("results").classList.contains("hidden"));
       });
       qBar.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
           e.preventDefault();
           choose(active);
           qBar.value = "";
+          $("q").value = "";
+          renderResults();
         }
       });
     }
