@@ -102,8 +102,8 @@
       select,
       textarea {
         width: 100%;
-        margin-top: 3px;
-        padding: 8px 10px;
+        margin-top: 0px;
+        padding: 3px 5px;
         color: var(--ink);
         border: 1px solid #b9c1cc;
         border-radius: 4px;
@@ -435,7 +435,28 @@
             </select></label
           >
           <div class="row">
-            <label>Date <input type="date" id="date" /></label>
+            <label
+              style="
+                display: flex;
+                align-items: center;
+                gap: 0px;
+                flex-direction: row;
+                flex-wrap: wrap;
+              "
+            >
+              Date
+              <input
+                type="checkbox"
+                id="dateActive"
+                style="width: auto; margin: 0"
+              />
+              <input
+                type="date"
+                id="date"
+                disabled
+                style="flex: 1; background: #eee; color: #888"
+              />
+            </label>
             <label
               >Transfer type
               <select id="transferType"></select

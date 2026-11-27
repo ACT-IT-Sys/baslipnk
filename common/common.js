@@ -23,7 +23,10 @@ window.UOBCommon = {
     const d = window.UOBConfig.defaults;
     return {
       ...data,
-      date: data.date || d.date(),
+      // Empty string means "no date" (checkbox off). Only apply today when the key is missing.
+      date: Object.prototype.hasOwnProperty.call(data, "date")
+        ? data.date || ""
+        : d.date(),
       transferType: data.transferType || d.transferType,
       beneficiaryType: data.beneficiaryType || d.beneficiaryType,
     };

@@ -559,7 +559,7 @@
           data[k] = k;
       });
     const slip = window.UOBRenderer.render(data, variant, {
-      date: $("date").value,
+      date: $("dateActive").checked ? $("date").value : "",
       transferType: $("transferType").value || (dragMode ? "TT" : ""),
       beneficiaryType:
         $("beneficiaryType").value || (dragMode ? "Corporate" : ""),
@@ -598,7 +598,8 @@
   // ---- Init -----------------------------------------------------------
   function init() {
     const cfg = window.UOBConfig;
-    $("date").value = cfg.defaults.date();
+    $("date").value = "";
+    $("date").disabled = true;
     fillSelect("transferType", cfg.transferTypes, cfg.defaults.transferType);
     fillSelect(
       "beneficiaryType",
@@ -620,6 +621,17 @@
       }
     });
     document.querySelector(".form").addEventListener("change", (e) => {
+      if (e.target.id === "dateActive") {
+        const on = e.target.checked;
+        const d = $("date");
+        d.disabled = !on;
+        d.style.background = on ? "" : "#eee";
+        d.style.color = on ? "" : "#888";
+        if (on && !d.value) d.value = window.UOBConfig.defaults.date();
+        if (!on) d.value = "";
+        renderSlip();
+        return;
+      }
       if (e.target.id !== "csvFile") {
         if (e.target.id === "variant") loadCoordsFromLocal(e.target.value);
         renderSlip();
